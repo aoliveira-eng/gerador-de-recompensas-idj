@@ -22,7 +22,7 @@ Como mencionado no alerta no início, **esse website ainda está em desenvolvime
 > Essa lista de tarefas está sujeito a mudanças, com novas tarefas podendo ser adicionadas e/ou já existentes sendo removidas.
 
 - [x] Criação do layout básico do website.
-- [x] Funcionalidade de gerar quais serão as recompensas e tesouros baseado no ND e respondendo no console.
+- [x] Funcionalidade de gerar quais serão as recompensas.
 - [ ] Alteração no DOM para que as recompensas e tesouros sejam exibidos no website, ao lado ou abaixo do `seletor de ND`, dependendo do tamanho da tela.
 - [ ] Criação das tabela de geração de gemas.
 - [ ] Criação das tabela de geração de obras de arte.
