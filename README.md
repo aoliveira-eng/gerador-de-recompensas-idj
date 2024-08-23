@@ -1,4 +1,4 @@
-![Logo do sistema de RPG Império de Jade. Todos os direitos são reservados a Jambo Editora.](assets\images\Logo.png)
+![Logo do sistema de RPG Império de Jade. Todos os direitos são reservados a Jambo Editora.](assets/images/Logo.png)
 
 # Gerador de Recompensas para Império de Jade RPG
 
