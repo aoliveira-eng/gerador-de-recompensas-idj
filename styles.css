@@ -3,6 +3,7 @@
 body {
 	background-color: #f2ece0;
 	font-family: 'Merriweather', serif;
+	font-size: 1.2rem;
 }
 
 @font-face {
@@ -53,8 +54,12 @@ body {
 
 .hero-text {
 	padding: 10px 0px;
-	background-color: #f2ece0af;
+	background-color: #f2ece0d5;
 	border-radius: 10px;
+}
+
+.hero-p {
+	font-size: 1.3rem;
 }
 
 .start-button,
@@ -64,7 +69,7 @@ body {
 }
 
 .generate-button {
-	font-size: 18px;
+	font-size: 1.4rem;
 }
 
 .start-button:hover,
@@ -76,6 +81,11 @@ body {
 @media (max-width: 860px) {
 	.hero {
 		background-image: none;
+		background-color: #f2ece0;
+	}
+
+	.hero-p {
+		font-size: 1.1rem;
 	}
 
 	.hero-text {
