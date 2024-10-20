@@ -23,19 +23,19 @@ Como mencionado no alerta no início, **esse website ainda está em desenvolvime
 
 - [x] Criação do layout básico do website.
 - [x] Funcionalidade de gerar quais serão as recompensas.
-- [ ] Alteração no DOM para que as recompensas e tesouros sejam exibidos no website, ao lado ou abaixo do `seletor de ND`, dependendo do tamanho da tela.
-- [ ] Criação das tabela de geração de gemas.
-- [ ] Criação das tabela de geração de obras de arte.
-- [ ] Criação das tabela de geração de itens diversos.
-- [ ] Criação das tabela de geração de armas.
-- [ ] Criação das tabela de geração de armaduras.
-- [ ] Criação das tabela de geração de materiais especiais.
-- [ ] Criação das tabela de geração de itens mágicos.
-- [ ] Criação das tabela de geração de armas específicas.
-- [ ] Criação das tabela de geração de armaduras específicas.
-- [ ] Criação das tabela de geração de ofuda.
-- [ ] Criação das tabela de geração de amuletos.
-- [ ] Criação das tabela de geração de acessórios.
+- [x] Alteração no DOM para que as recompensas e tesouros sejam exibidos no website, ao lado ou abaixo do `seletor de ND`, dependendo do tamanho da tela.
+- [x] Criação do dicionário de gemas.
+- [x] Criação do dicionário de obras de arte.
+- [x] Criação do dicionário de itens diversos.
+- [ ] Criação do dicionário de armas.
+- [ ] Criação do dicionário de armaduras.
+- [ ] Criação do dicionário de materiais especiais.
+- [ ] Criação do dicionário de itens mágicos.
+- [ ] Criação do dicionário de armas específicas.
+- [ ] Criação do dicionário de armaduras específicas.
+- [ ] Criação do dicionário de ofuda.
+- [ ] Criação do dicionário de amuletos.
+- [ ] Criação do dicionário de acessórios.
 - [ ] \(Opcional) Criar uma plataforma para login do usuário para armazenar e acessar o histórico de recompenas criadas.
 
 ## Rodapé
