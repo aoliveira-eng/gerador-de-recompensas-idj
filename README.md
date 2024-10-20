@@ -4,6 +4,12 @@
 
 **Utilize esse website para gerar as recompensas para a sua campanhade RPG baseado apenas no ND, sem precisar rolar dados!**
 
+> [!CAUTION]
+> Embora o link para o site no github funcione, a função de gerar os itens reportará o erro ERR_CONNECTION_REFUSED no console.
+> Isso se deve ao fato de que para chamar tal função, o site precisa enviar um post request para o servidor, rodando o código
+> em python. Uma vez que for configurado o servidor online, será possível gerar suas recompensas sem problemas, e o servidor
+> será configurado assim que o dicionário de armas, armaduras e materiais especias estiver pronto.
+
 > [!WARNING]
 > Esse website ainda está em desenvolvimento! Mudanças drásticas podem acontecer no layout e/ou funcionalidade do website. Por favor atente-se às notas de versão.
 
