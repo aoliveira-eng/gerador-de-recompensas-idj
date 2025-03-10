@@ -72,6 +72,10 @@ body {
 	font-size: 1.4rem;
 }
 
+.reward:nth-child(1){
+	margin: 16px 0px 8px;
+}
+
 .start-button:hover,
 .generate-button:hover {
 	background-color: #306737;
