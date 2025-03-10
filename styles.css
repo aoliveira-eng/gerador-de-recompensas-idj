@@ -72,6 +72,10 @@ body {
 	font-size: 1.4rem;
 }
 
+.spinner{
+	margin-top: 8px;
+}
+
 .reward:nth-child(1){
 	margin: 16px 0px 8px;
 }

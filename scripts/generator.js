@@ -193,23 +193,37 @@ function generateReward(nd) {
 	let riches = getValueFromDict(richesDict, nd); // Busca riquezas
 	let equip = getValueFromDict(equipmentDict, nd); // Busca equipamentos
 
-	console.log(`Riquezas: ${riches}`);
-	console.log(`Equipamento: ${equip}`);
+	var elements = document.getElementsByClassName('hidden-initially');
+	for (var i = 0; i < elements.length; i++) {
+		if (elements[i].style.display === 'none') {
+			elements[i].style.display = 'block';
+		}
+	}
 
-	// Exibe os resultados na página
-	const resultsDiv = document.getElementById('result');
-	resultsDiv.innerHTML = ''; // Limpa o conteúdo anterior
+	sleep(500).then(() => {
+		for (var i = 0; i < elements.length; i++) {
+			if (elements[i].style.display === 'block') {
+				elements[i].style.display = 'none';
+			}
+		}
+		console.log(`Riquezas: ${riches}`);
+		console.log(`Equipamento: ${equip}`);
 
-	const richesParagraph = document.createElement('p');
-	richesParagraph.classList.add('reward');
-	richesParagraph.innerText = `Riquezas: ${riches}`; // Exibe as riquezas
+		// Exibe os resultados na página
+		const resultsDiv = document.getElementById('result');
+		resultsDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
-	const equipParagraph = document.createElement('p');
-	equipParagraph.classList.add('reward');
-	equipParagraph.innerText = `Equipamento: ${equip}`; // Exibe o equipamento
+		const richesParagraph = document.createElement('p');
+		richesParagraph.classList.add('reward');
+		richesParagraph.innerText = `Riquezas: ${riches}`; // Exibe as riquezas
 
-	resultsDiv.appendChild(richesParagraph);
-	resultsDiv.appendChild(equipParagraph);
+		const equipParagraph = document.createElement('p');
+		equipParagraph.classList.add('reward');
+		equipParagraph.innerText = `Equipamento: ${equip}`; // Exibe o equipamento
+
+		resultsDiv.appendChild(richesParagraph);
+		resultsDiv.appendChild(equipParagraph);
+	});
 }
 
 // Função para obter o ND selecionado e gerar recompensas
@@ -217,4 +231,8 @@ function getND() {
 	const ndSelector = document.getElementById('ndSelector');
 	const selectedND = ndSelector.value; // Obtém o valor selecionado no dropdown
 	generateReward(selectedND); // Gera as recompensas
+}
+
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 }
