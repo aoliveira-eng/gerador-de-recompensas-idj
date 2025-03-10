@@ -28,7 +28,9 @@ function richesGenerator(rolls, die, modifier, multiplicator, value) {
 // Função para gerar itens raros
 function rareItemGenerator(rolls, die, modifier, richType) {
 	let quantity = rollDie(rolls, die) + modifier; // Define a quantidade de itens raros
-	let masterpieceLib = [];
+	let masterpieceLib = new Map(); // Map para armazenar os itens
+	let totalValue = 0; // Variável para armazenar o valor total de todas as riquezas
+
 	for (let i = 0; i < quantity; i++) {
 		const dHundred = rollDie(1, 100); // Rola um d100 para cada item
 		for (const cd in richType) {
@@ -37,129 +39,159 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 				const masterpiece =
 					richType[cd].examples[
 						Math.floor(Math.random() * richType[cd].examples.length)
-					]; // Escolhe um item aleatório
-				masterpieceLib.push(
-					`${masterpiece} (Valor: ${richType[cd].price()})`
-				); // Adiciona o item à lista
+					];
+				const price = richType[cd].price(); // Obtém o preço do item
+
+				// Verifica se a masterpiece já existe no Map
+				if (masterpieceLib.has(masterpiece)) {
+					// Se existir, atualiza a quantidade e adiciona o preço à lista de preços
+					const existing = masterpieceLib.get(masterpiece);
+					existing.prices.push(price); // Adiciona o novo preço à lista
+					masterpieceLib.set(masterpiece, {
+						quantity: existing.quantity + 1,
+						prices: existing.prices, // Mantém a lista de preços
+					});
+				} else {
+					// Se não existir, adiciona ao Map com quantidade 1 e uma lista contendo o preço
+					masterpieceLib.set(masterpiece, {
+						quantity: 1,
+						prices: [price], // Inicia a lista de preços
+					});
+				}
+
+				totalValue += price; // Adiciona o preço ao valor total
 				break;
 			}
 		}
 	}
 
 	// Formata a lista de itens raros
-	if (masterpieceLib.length === 1) {
-		return `${masterpieceLib[0]}.`; // Retorna o único item
-	} else if (masterpieceLib.length === 2) {
-		return `${masterpieceLib[0]} e ${masterpieceLib[1]}.`; // Retorna dois itens separados por "e"
-	} else if (masterpieceLib.length > 2) {
-		const allButLast = masterpieceLib.slice(0, -1).join(', '); // Separa todos os itens, exceto o último, por vírgula
-		const lastItem = masterpieceLib[masterpieceLib.length - 1]; // Pega o último item
-		return `${allButLast} e ${lastItem}.`; // Retorna a lista formatada
+	const formattedItems = [];
+	for (const [masterpiece, data] of masterpieceLib.entries()) {
+		if (data.quantity > 1) {
+			// Se houver mais de uma unidade, formata os preços
+			const pricesFormatted = formatPrices(data.prices); // Formata os preços
+			formattedItems.push(
+				`(${data.quantity}x) ${masterpiece} (${pricesFormatted})`
+			);
+		} else {
+			// Se houver apenas uma unidade, adiciona sem a quantidade
+			formattedItems.push(`${masterpiece} (${data.prices[0]} ¥o)`);
+		}
+	}
+
+	// Retorna a lista formatada com o total
+	if (formattedItems.length === 1) {
+		return `${formattedItems[0]}. Total: ${totalValue} ¥o`; // Retorna o único item com o total
+	} else if (formattedItems.length === 2) {
+		return `${formattedItems[0]} e ${formattedItems[1]}. Total: ${totalValue} ¥o`; // Retorna dois itens separados por "e" com o total
+	} else if (formattedItems.length > 2) {
+		const allButLast = formattedItems.slice(0, -1).join(', '); // Separa todos os itens, exceto o último, por vírgula
+		const lastItem = formattedItems[formattedItems.length - 1]; // Pega o último item
+		return `${allButLast} e ${lastItem}. Total: ${totalValue} ¥o`; // Retorna a lista formatada com o total
 	} else {
 		return 'Nenhum item encontrado.'; // Retorna uma mensagem se nenhum item for encontrado
+	}
+}
+
+// Função para formatar os preços
+function formatPrices(prices) {
+	if (prices.length === 1) {
+		return `${prices[0]} ¥o`; // Retorna o preço único
+	} else if (prices.length === 2) {
+		return `${prices[0]} ¥o e ${prices[1]} ¥o`; // Retorna dois preços separados por "e"
+	} else if (prices.length > 2) {
+		const allButLast = prices.slice(0, -1).join(' ¥o, '); // Separa todos os preços, exceto o último, por vírgula
+		const lastPrice = prices[prices.length - 1]; // Pega o último preço
+		return `${allButLast} ¥o e ${lastPrice} ¥o`; // Retorna a lista formatada
+	}
+	return ''; // Caso não haja preços
+}
+
+// Função para carregar e transformar dados JSON
+async function loadAndTransformJSON(url, transformFn) {
+	const response = await fetch(url);
+	const data = await response.json();
+	if (transformFn) {
+		transformFn(data);
+	}
+	return data;
+}
+
+// Função para transformar strings em funções
+function transformFunctions(data) {
+	for (const key in data) {
+		if (
+			data[key].price &&
+			typeof data[key].price === 'string' &&
+			data[key].price.startsWith('return')
+		) {
+			data[key].price = new Function(data[key].price);
+		}
+	}
+}
+
+// Função para transformar strings em funções em dicionários aninhados
+function transformNestedFunctions(data) {
+	for (const nd in data) {
+		for (const cd in data[nd]) {
+			if (
+				typeof data[nd][cd] === 'string' &&
+				data[nd][cd].startsWith('return')
+			) {
+				data[nd][cd] = new Function(data[nd][cd]);
+			}
+		}
 	}
 }
 
 // Carregar os dados dos arquivos JSON
 let items, gems, arts, richesDict, equipmentDict;
 
-fetch('scripts/dictionaries/items.json')
-	.then((response) => response.json())
-	.then((data) => (items = data));
+Promise.all([
+	loadAndTransformJSON('scripts/dictionaries/items.json'),
+	loadAndTransformJSON('scripts/dictionaries/gems.json', transformFunctions),
+	loadAndTransformJSON('scripts/dictionaries/arts.json', transformFunctions),
+	loadAndTransformJSON(
+		'scripts/dictionaries/riches.json',
+		transformNestedFunctions
+	),
+	loadAndTransformJSON(
+		'scripts/dictionaries/equipment.json',
+		transformNestedFunctions
+	),
+]).then(([itemsData, gemsData, artsData, richesData, equipmentData]) => {
+	items = itemsData;
+	gems = gemsData;
+	arts = artsData;
+	richesDict = richesData;
+	equipmentDict = equipmentData;
+});
 
-fetch('scripts/dictionaries/gems.json')
-	.then((response) => response.json())
-	.then((data) => {
-		gems = data;
-		// Transformar strings em funções
-		for (const key in gems) {
-			if (
-				gems[key].price &&
-				typeof gems[key].price === 'string' &&
-				gems[key].price.startsWith('return')
-			) {
-				gems[key].price = new Function(gems[key].price);
-			}
-		}
-	});
+// Função para buscar um valor no dicionário com base no resultado do dado
+function getValueFromDict(dict, nd) {
+	const dHundred = rollDie(1, 100); // Rola um d100
+	for (const cd in dict[nd]) {
+		if (dHundred <= parseInt(cd)) {
+			// Verifica se o valor do d100 corresponde a uma entrada no dicionário
+			const value = dict[nd][cd];
 
-fetch('scripts/dictionaries/arts.json')
-	.then((response) => response.json())
-	.then((data) => {
-		arts = data;
-		// Transformar strings em funções
-		for (const key in arts) {
-			if (
-				arts[key].price &&
-				typeof arts[key].price === 'string' &&
-				arts[key].price.startsWith('return')
-			) {
-				arts[key].price = new Function(arts[key].price);
+			// Se o valor for uma função, executa a função
+			if (typeof value === 'function') {
+				return value();
 			}
-		}
-	});
 
-fetch('scripts/dictionaries/riches.json')
-	.then((response) => response.json())
-	.then((data) => {
-		richesDict = data;
-		// Transformar strings em funções
-		for (const nd in richesDict) {
-			for (const cd in richesDict[nd]) {
-				if (
-					typeof richesDict[nd][cd] === 'string' &&
-					richesDict[nd][cd].startsWith('return')
-				) {
-					richesDict[nd][cd] = new Function(richesDict[nd][cd]);
-				}
-			}
+			return value;
 		}
-	});
-
-fetch('scripts/dictionaries/equipment.json')
-	.then((response) => response.json())
-	.then((data) => {
-		equipmentDict = data;
-		// Transformar strings em funções
-		for (const nd in equipmentDict) {
-			for (const cd in equipmentDict[nd]) {
-				if (
-					typeof equipmentDict[nd][cd] === 'string' &&
-					equipmentDict[nd][cd].startsWith('return')
-				) {
-					equipmentDict[nd][cd] = new Function(equipmentDict[nd][cd]);
-				}
-			}
-		}
-	});
+	}
+	return `Valor não encontrado`; // Retorna uma string vazia se nenhum valor for encontrado
+}
 
 // Função para gerar recompensas
 function generateReward(nd) {
-	let dHundred = rollDie(1, 100); // Rola um d100 para riquezas
-	let riches = '';
-	for (const cd in richesDict[nd]) {
-		if (dHundred <= parseInt(cd)) {
-			// Verifica se o valor do d100 corresponde a uma entrada no dicionário
-			riches =
-				typeof richesDict[nd][cd] === 'function'
-					? richesDict[nd][cd]()
-					: richesDict[nd][cd]; // Executa a função ou retorna o valor
-			break;
-		}
-	}
-
-	dHundred = rollDie(1, 100); // Rola um d100 para equipamentos
-	let equip = '';
-	for (const cd in equipmentDict[nd]) {
-		if (dHundred <= parseInt(cd)) {
-			// Verifica se o valor do d100 corresponde a uma entrada no dicionário
-			equip =
-				typeof equipmentDict[nd][cd] === 'function'
-					? equipmentDict[nd][cd]()
-					: equipmentDict[nd][cd]; // Executa a função ou retorna o valor
-			break;
-		}
-	}
+	// Uso da função auxiliar
+	let riches = getValueFromDict(richesDict, nd); // Busca riquezas
+	let equip = getValueFromDict(equipmentDict, nd); // Busca equipamentos
 
 	console.log(`Riquezas: ${riches}`);
 	console.log(`Equipamento: ${equip}`);
