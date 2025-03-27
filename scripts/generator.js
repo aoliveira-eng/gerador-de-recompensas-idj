@@ -7,16 +7,15 @@ function rollDie(rolls, die) {
 	return sum;
 }
 
-// Função para gerar um item aleatório
-function itemGenerator() {
-	const dHundred = rollDie(1, 100); // Rola um d100
-	for (const chance in items) {
+function basicGenerator(type) {
+	if (!type || typeof type !== 'object') return null;
+	const dHundred = rollDie(1, 100);
+	for (const chance in type) {
 		if (dHundred - 1 < chance) {
-			// Verifica se o valor do d100 corresponde a um item
-			return items[chance]; // Retorna o item correspondente
+			return type[chance];
 		}
 	}
-	return null; // Retorna null se nenhum item for encontrado
+	return null;
 }
 
 // Função para gerar riquezas
@@ -27,12 +26,13 @@ function richesGenerator(rolls, die, modifier, multiplicator, value) {
 
 // Função para gerar itens raros
 function rareItemGenerator(rolls, die, modifier, richType) {
-	let quantity = rollDie(rolls, die) + modifier; // Define a quantidade de itens raros
-	let masterpieceLib = new Map(); // Map para armazenar os itens
-	let totalValue = 0; // Variável para armazenar o valor total de todas as riquezas
+	let quantity = rollDie(rolls, die) + modifier;
+	let masterpieceLib = new Map();
+	let totalRiches = 0;
+	let totalValue = 0;
 
 	for (let i = 0; i < quantity; i++) {
-		const dHundred = rollDie(1, 100); // Rola um d100 para cada item
+		const dHundred = rollDie(1, 100);
 		for (const cd in richType) {
 			if (dHundred <= cd) {
 				// Verifica se o valor do d100 corresponde a um item raro
@@ -40,9 +40,8 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 					richType[cd].examples[
 						Math.floor(Math.random() * richType[cd].examples.length)
 					];
-				const price = richType[cd].price(); // Obtém o preço do item
+				const price = richType[cd].price();
 
-				// Verifica se a masterpiece já existe no Map
 				if (masterpieceLib.has(masterpiece)) {
 					// Se existir, atualiza a quantidade e adiciona o preço à lista de preços
 					const existing = masterpieceLib.get(masterpiece);
@@ -58,7 +57,7 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 						prices: [price], // Inicia a lista de preços
 					});
 				}
-
+				totalRiches += 1; // Adiciona 1 à quantidade de riquezas
 				totalValue += price; // Adiciona o preço ao valor total
 				break;
 			}
@@ -84,11 +83,11 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 	if (formattedItems.length === 1) {
 		return `${formattedItems[0]}. Total: ${totalValue} ¥o`; // Retorna o único item com o total
 	} else if (formattedItems.length === 2) {
-		return `${formattedItems[0]} e ${formattedItems[1]}. Total: ${totalValue} ¥o`; // Retorna dois itens separados por "e" com o total
+		return `${totalRiches} itens. ${formattedItems[0]} e ${formattedItems[1]}. Total: ${totalValue} ¥o`; // Retorna dois itens separados por "e" com o total
 	} else if (formattedItems.length > 2) {
 		const allButLast = formattedItems.slice(0, -1).join(', '); // Separa todos os itens, exceto o último, por vírgula
 		const lastItem = formattedItems[formattedItems.length - 1]; // Pega o último item
-		return `${allButLast} e ${lastItem}. Total: ${totalValue} ¥o`; // Retorna a lista formatada com o total
+		return `${totalRiches} itens. ${allButLast} e ${lastItem}. Total: ${totalValue} ¥o`; // Retorna a lista formatada com o total
 	} else {
 		return 'Nenhum item encontrado.'; // Retorna uma mensagem se nenhum item for encontrado
 	}
@@ -118,78 +117,109 @@ async function loadAndTransformJSON(url, transformFn) {
 	return data;
 }
 
-// Função para transformar strings em funções
-function transformFunctions(data) {
-	for (const key in data) {
-		if (
-			data[key].price &&
-			typeof data[key].price === 'string' &&
-			data[key].price.startsWith('return')
-		) {
-			data[key].price = new Function(data[key].price);
+function transformFunctions(data, isNested = false) {
+	const transformValue = (value) => {
+		if (typeof value === 'string') {
+			if (value.trim().startsWith('return')) {
+				try {
+					return new Function(value);
+				} catch (e) {
+					console.error('Erro ao criar função:', e);
+					return value;
+				}
+			}
 		}
-	}
-}
+		return value;
+	};
 
-// Função para transformar strings em funções em dicionários aninhados
-function transformNestedFunctions(data) {
-	for (const nd in data) {
-		for (const cd in data[nd]) {
-			if (
-				typeof data[nd][cd] === 'string' &&
-				data[nd][cd].startsWith('return')
-			) {
-				data[nd][cd] = new Function(data[nd][cd]);
+	for (const key in data) {
+		if (isNested && typeof data[key] === 'object') {
+			for (const subKey in data[key]) {
+				data[key][subKey] = transformValue(data[key][subKey]);
+			}
+		} else {
+			data[key] = transformValue(data[key]);
+
+			// Transforma propriedades 'price' se existirem
+			if (data[key] && typeof data[key] === 'object' && data[key].price) {
+				data[key].price = transformValue(data[key].price);
 			}
 		}
 	}
 }
 
 // Carregar os dados dos arquivos JSON
-let items, gems, arts, richesDict, equipmentDict;
+let items, weapons, armors, clothings, gems, arts, richesDict, equipmentDict;
 
 Promise.all([
 	loadAndTransformJSON('scripts/dictionaries/items.json'),
+	loadAndTransformJSON('scripts/dictionaries/weapons.json'),
+	loadAndTransformJSON('scripts/dictionaries/armors.json', (data) =>
+		transformFunctions(data, false)
+	),
+	loadAndTransformJSON('scripts/dictionaries/clothings.json'),
 	loadAndTransformJSON('scripts/dictionaries/gems.json', transformFunctions),
 	loadAndTransformJSON('scripts/dictionaries/arts.json', transformFunctions),
-	loadAndTransformJSON(
-		'scripts/dictionaries/riches.json',
-		transformNestedFunctions
+	loadAndTransformJSON('scripts/dictionaries/riches.json', (data) =>
+		transformFunctions(data, true)
 	),
-	loadAndTransformJSON(
-		'scripts/dictionaries/equipment.json',
-		transformNestedFunctions
+	loadAndTransformJSON('scripts/dictionaries/equipment.json', (data) =>
+		transformFunctions(data, true)
 	),
-]).then(([itemsData, gemsData, artsData, richesData, equipmentData]) => {
-	items = itemsData;
-	gems = gemsData;
-	arts = artsData;
-	richesDict = richesData;
-	equipmentDict = equipmentData;
-});
+]).then(
+	([
+		itemsData,
+		weaponsData,
+		armorsData,
+		clothingsData,
+		gemsData,
+		artsData,
+		richesData,
+		equipmentData,
+	]) => {
+		items = itemsData;
+		weapons = weaponsData;
+		armors = armorsData;
+		clothings = clothingsData;
+		gems = gemsData;
+		arts = artsData;
+		richesDict = richesData;
+		equipmentDict = equipmentData;
+	}
+);
 
 // Função para buscar um valor no dicionário com base no resultado do dado
 function getValueFromDict(dict, nd) {
-	const dHundred = rollDie(1, 100); // Rola um d100
+	if (!dict || !dict[nd]) return 'ND inválido';
+
+	const dHundred = rollDie(1, 100);
+
 	for (const cd in dict[nd]) {
 		if (dHundred <= parseInt(cd)) {
-			// Verifica se o valor do d100 corresponde a uma entrada no dicionário
 			const value = dict[nd][cd];
 
-			// Se o valor for uma função, executa a função
+			// Se for função, executa
 			if (typeof value === 'function') {
-				return value();
+				try {
+					const result = value();
+					// Se o resultado for outra função (caso aninhado), executa novamente
+					return typeof result === 'function' ? result() : result;
+				} catch (e) {
+					console.error('Erro ao executar função:', e);
+					return `Erro: ${e.message}`;
+				}
 			}
-
 			return value;
 		}
 	}
-	return `Valor não encontrado`; // Retorna uma string vazia se nenhum valor for encontrado
+	return 'Nenhum item encontrado';
 }
 
-// Função para gerar recompensas
-function generateReward(nd) {
-	// Uso da função auxiliar
+// Função para obter o ND selecionado e gerar recompensas
+function getND() {
+	const ndSelector = document.getElementById('ndSelector');
+	const nd = ndSelector.value;
+
 	let riches = getValueFromDict(richesDict, nd); // Busca riquezas
 	let equip = getValueFromDict(equipmentDict, nd); // Busca equipamentos
 
@@ -224,13 +254,6 @@ function generateReward(nd) {
 		resultsDiv.appendChild(richesParagraph);
 		resultsDiv.appendChild(equipParagraph);
 	});
-}
-
-// Função para obter o ND selecionado e gerar recompensas
-function getND() {
-	const ndSelector = document.getElementById('ndSelector');
-	const selectedND = ndSelector.value; // Obtém o valor selecionado no dropdown
-	generateReward(selectedND); // Gera as recompensas
 }
 
 function sleep(ms) {
