@@ -33,9 +33,9 @@ Como mencionado no alerta no início, **esse website ainda está em desenvolvime
 - [x] Criação do dicionário de gemas.
 - [x] Criação do dicionário de obras de arte.
 - [x] Criação do dicionário de itens diversos.
-- [ ] Criação do dicionário de armas.
-- [ ] Criação do dicionário de armaduras.
-- [ ] Criação do dicionário de materiais especiais.
+- [x] Criação do dicionário de armas.
+- [x] Criação do dicionário de armaduras.
+- [x] Criação do dicionário de materiais especiais.
 - [ ] Criação do dicionário de itens mágicos.
 - [ ] Criação do dicionário de armas específicas.
 - [ ] Criação do dicionário de armaduras específicas.

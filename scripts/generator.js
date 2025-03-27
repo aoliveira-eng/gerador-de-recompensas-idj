@@ -1,27 +1,46 @@
-// Função para rolar dados
+// Gerar o valor dos dados
 function rollDie(rolls, die) {
 	let sum = 0;
 	for (let i = 0; i < rolls; i++) {
-		sum += Math.floor(Math.random() * die) + 1; // Gera um número aleatório entre 1 e o valor do dado
+		sum += Math.floor(Math.random() * die) + 1;
 	}
 	return sum;
 }
 
-function basicGenerator(type) {
+// Gerar o tipo de equipamento e caso seja de material especial
+function basicGenerator(type, isSpecialMaterial = false) {
 	if (!type || typeof type !== 'object') return null;
+
 	const dHundred = rollDie(1, 100);
+	let equipment = null;
+
+	// Encontra o equipamento
 	for (const chance in type) {
-		if (dHundred - 1 < chance) {
-			return type[chance];
+		if (dHundred <= parseInt(chance)) {
+			equipment = type[chance];
+			break;
 		}
 	}
-	return null;
+
+	if (!equipment) return null;
+
+	// Adiciona material especial se necessário
+	if (isSpecialMaterial && materials) {
+		const materialRoll = rollDie(1, 100);
+		for (const matChance in materials) {
+			if (materialRoll <= parseInt(matChance)) {
+				return `${equipment} de ${materials[matChance]}`;
+			}
+		}
+	}
+
+	return equipment;
 }
 
 // Função para gerar riquezas
 function richesGenerator(rolls, die, modifier, multiplicator, value) {
-	const result = (rollDie(rolls, die) + modifier) * multiplicator; // Calcula o valor das riquezas
-	return `${result} ${value}`; // Retorna o valor formatado
+	const result = (rollDie(rolls, die) + modifier) * multiplicator;
+	return `${result} ${value}`;
 }
 
 // Função para gerar itens raros
@@ -35,7 +54,6 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 		const dHundred = rollDie(1, 100);
 		for (const cd in richType) {
 			if (dHundred <= cd) {
-				// Verifica se o valor do d100 corresponde a um item raro
 				const masterpiece =
 					richType[cd].examples[
 						Math.floor(Math.random() * richType[cd].examples.length)
@@ -43,22 +61,20 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 				const price = richType[cd].price();
 
 				if (masterpieceLib.has(masterpiece)) {
-					// Se existir, atualiza a quantidade e adiciona o preço à lista de preços
 					const existing = masterpieceLib.get(masterpiece);
-					existing.prices.push(price); // Adiciona o novo preço à lista
+					existing.prices.push(price);
 					masterpieceLib.set(masterpiece, {
 						quantity: existing.quantity + 1,
-						prices: existing.prices, // Mantém a lista de preços
+						prices: existing.prices,
 					});
 				} else {
-					// Se não existir, adiciona ao Map com quantidade 1 e uma lista contendo o preço
 					masterpieceLib.set(masterpiece, {
 						quantity: 1,
-						prices: [price], // Inicia a lista de preços
+						prices: [price],
 					});
 				}
-				totalRiches += 1; // Adiciona 1 à quantidade de riquezas
-				totalValue += price; // Adiciona o preço ao valor total
+				totalRiches += 1;
+				totalValue += price;
 				break;
 			}
 		}
@@ -68,43 +84,41 @@ function rareItemGenerator(rolls, die, modifier, richType) {
 	const formattedItems = [];
 	for (const [masterpiece, data] of masterpieceLib.entries()) {
 		if (data.quantity > 1) {
-			// Se houver mais de uma unidade, formata os preços
-			const pricesFormatted = formatPrices(data.prices); // Formata os preços
+			const pricesFormatted = formatPrices(data.prices);
 			formattedItems.push(
 				`(${data.quantity}x) ${masterpiece} (${pricesFormatted})`
 			);
 		} else {
-			// Se houver apenas uma unidade, adiciona sem a quantidade
 			formattedItems.push(`${masterpiece} (${data.prices[0]} ¥o)`);
 		}
 	}
 
 	// Retorna a lista formatada com o total
 	if (formattedItems.length === 1) {
-		return `${formattedItems[0]}. Total: ${totalValue} ¥o`; // Retorna o único item com o total
+		return `${formattedItems[0]}. Total: ${totalValue} ¥o`;
 	} else if (formattedItems.length === 2) {
-		return `${totalRiches} itens. ${formattedItems[0]} e ${formattedItems[1]}. Total: ${totalValue} ¥o`; // Retorna dois itens separados por "e" com o total
+		return `${totalRiches} itens. ${formattedItems[0]} e ${formattedItems[1]}. Total: ${totalValue} ¥o`;
 	} else if (formattedItems.length > 2) {
-		const allButLast = formattedItems.slice(0, -1).join(', '); // Separa todos os itens, exceto o último, por vírgula
-		const lastItem = formattedItems[formattedItems.length - 1]; // Pega o último item
-		return `${totalRiches} itens. ${allButLast} e ${lastItem}. Total: ${totalValue} ¥o`; // Retorna a lista formatada com o total
+		const allButLast = formattedItems.slice(0, -1).join(', ');
+		const lastItem = formattedItems[formattedItems.length - 1];
+		return `${totalRiches} itens. ${allButLast} e ${lastItem}. Total: ${totalValue} ¥o`;
 	} else {
-		return 'Nenhum item encontrado.'; // Retorna uma mensagem se nenhum item for encontrado
+		return 'Nenhum item encontrado.';
 	}
 }
 
 // Função para formatar os preços
 function formatPrices(prices) {
 	if (prices.length === 1) {
-		return `${prices[0]} ¥o`; // Retorna o preço único
+		return `${prices[0]} ¥o`;
 	} else if (prices.length === 2) {
-		return `${prices[0]} ¥o e ${prices[1]} ¥o`; // Retorna dois preços separados por "e"
+		return `${prices[0]} ¥o e ${prices[1]} ¥o`;
 	} else if (prices.length > 2) {
-		const allButLast = prices.slice(0, -1).join(' ¥o, '); // Separa todos os preços, exceto o último, por vírgula
-		const lastPrice = prices[prices.length - 1]; // Pega o último preço
-		return `${allButLast} ¥o e ${lastPrice} ¥o`; // Retorna a lista formatada
+		const allButLast = prices.slice(0, -1).join(' ¥o, ');
+		const lastPrice = prices[prices.length - 1];
+		return `${allButLast} ¥o e ${lastPrice} ¥o`;
 	}
-	return ''; // Caso não haja preços
+	return '';
 }
 
 // Função para carregar e transformar dados JSON
@@ -140,7 +154,6 @@ function transformFunctions(data, isNested = false) {
 		} else {
 			data[key] = transformValue(data[key]);
 
-			// Transforma propriedades 'price' se existirem
 			if (data[key] && typeof data[key] === 'object' && data[key].price) {
 				data[key].price = transformValue(data[key].price);
 			}
@@ -148,14 +161,22 @@ function transformFunctions(data, isNested = false) {
 	}
 }
 
-// Carregar os dados dos arquivos JSON
-let items, weapons, armors, clothings, gems, arts, richesDict, equipmentDict;
+let items,
+	materials,
+	weapons,
+	armors,
+	clothings,
+	gems,
+	arts,
+	richesDict,
+	equipmentDict;
 
 Promise.all([
 	loadAndTransformJSON('scripts/dictionaries/items.json'),
+	loadAndTransformJSON('scripts/dictionaries/materials.json'),
 	loadAndTransformJSON('scripts/dictionaries/weapons.json'),
 	loadAndTransformJSON('scripts/dictionaries/armors.json', (data) =>
-		transformFunctions(data, false)
+		transformFunctions(data)
 	),
 	loadAndTransformJSON('scripts/dictionaries/clothings.json'),
 	loadAndTransformJSON('scripts/dictionaries/gems.json', transformFunctions),
@@ -169,6 +190,7 @@ Promise.all([
 ]).then(
 	([
 		itemsData,
+		materialData,
 		weaponsData,
 		armorsData,
 		clothingsData,
@@ -178,6 +200,7 @@ Promise.all([
 		equipmentData,
 	]) => {
 		items = itemsData;
+		materials = materialData;
 		weapons = weaponsData;
 		armors = armorsData;
 		clothings = clothingsData;
@@ -188,7 +211,6 @@ Promise.all([
 	}
 );
 
-// Função para buscar um valor no dicionário com base no resultado do dado
 function getValueFromDict(dict, nd) {
 	if (!dict || !dict[nd]) return 'ND inválido';
 
@@ -198,11 +220,9 @@ function getValueFromDict(dict, nd) {
 		if (dHundred <= parseInt(cd)) {
 			const value = dict[nd][cd];
 
-			// Se for função, executa
 			if (typeof value === 'function') {
 				try {
 					const result = value();
-					// Se o resultado for outra função (caso aninhado), executa novamente
 					return typeof result === 'function' ? result() : result;
 				} catch (e) {
 					console.error('Erro ao executar função:', e);
@@ -220,8 +240,8 @@ function getND() {
 	const ndSelector = document.getElementById('ndSelector');
 	const nd = ndSelector.value;
 
-	let riches = getValueFromDict(richesDict, nd); // Busca riquezas
-	let equip = getValueFromDict(equipmentDict, nd); // Busca equipamentos
+	let riches = getValueFromDict(richesDict, nd);
+	let equip = getValueFromDict(equipmentDict, nd);
 
 	var elements = document.getElementsByClassName('hidden-initially');
 	for (var i = 0; i < elements.length; i++) {
@@ -239,17 +259,16 @@ function getND() {
 		console.log(`Riquezas: ${riches}`);
 		console.log(`Equipamento: ${equip}`);
 
-		// Exibe os resultados na página
 		const resultsDiv = document.getElementById('result');
-		resultsDiv.innerHTML = ''; // Limpa o conteúdo anterior
+		resultsDiv.innerHTML = '';
 
 		const richesParagraph = document.createElement('p');
 		richesParagraph.classList.add('reward');
-		richesParagraph.innerText = `Riquezas: ${riches}`; // Exibe as riquezas
+		richesParagraph.innerText = `Riquezas: ${riches}`;
 
 		const equipParagraph = document.createElement('p');
 		equipParagraph.classList.add('reward');
-		equipParagraph.innerText = `Equipamento: ${equip}`; // Exibe o equipamento
+		equipParagraph.innerText = `Equipamento: ${equip}`;
 
 		resultsDiv.appendChild(richesParagraph);
 		resultsDiv.appendChild(equipParagraph);

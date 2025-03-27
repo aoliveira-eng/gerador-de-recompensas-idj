@@ -43,30 +43,30 @@
 		"25": "-",
 		"65": "Arma obra-prima",
 		"90": "Armadura obra-prima",
-		"100": "Arma de material especial"
+		"100": "return basicGenerator(weapons, true)"
 	},
 	"7": {
 		"25": "-",
 		"65": "Armadura obra-prima",
-		"90": "Arma de material especial",
-		"100": "Armadura de material especial"
+		"90": "return basicGenerator(weapons, true)",
+		"100": "return basicGenerator(armors, true)"
 	},
 	"8": {
 		"25": "-",
-		"70": "Arma de material especial",
-		"90": "Armadura de material especial",
+		"70": "return basicGenerator(weapons, true)",
+		"90": "return basicGenerator(armors, true)",
 		"100": "Item mágico menor"
 	},
 	"9": {
 		"25": "-",
-		"65": "Arma de material especial",
-		"85": "Armadura de material especial",
+		"65": "return basicGenerator(weapons, true)",
+		"85": "return basicGenerator(armors, true)",
 		"100": "Item mágico menor"
 	},
 	"10": {
 		"25": "-",
-		"55": "Arma de material especial",
-		"80": "Armadura de material especial",
+		"55": "return basicGenerator(weapons, true)",
+		"80": "return basicGenerator(armors, true)",
 		"100": "Item mágico menor"
 	},
 	"11": { "50": "-", "90": "Item mágico menor", "100": "Item mágico médio" },
